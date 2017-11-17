@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FindPhotoSizeUI {
@@ -48,6 +49,9 @@ public class FindPhotoSizeUI {
         JPanel origHeightPanel = new JPanel();
         origHeightPanel.setLayout(new FlowLayout());
 
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new FlowLayout());
+
         resultsPanel = new JPanel();
         resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.PAGE_AXIS));
         scrollPane = new JScrollPane(resultsPanel);
@@ -61,6 +65,7 @@ public class FindPhotoSizeUI {
         originalHeightText = new JTextField(6);
 
         calculate = new JButton("Calculate");
+        calculate.setBackground(new Color(183, 232, 183));
         calculate.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 calculateSize();
@@ -75,6 +80,14 @@ public class FindPhotoSizeUI {
             }
         });
 
+        JButton reset = new JButton("Reset");
+        reset.setBackground(new Color(232, 183, 183));
+        reset.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearAll();
+            }
+        });
+
         contentPanel.add(headerLabel);
 
         origWidthPanel.add(originalWidth);
@@ -85,7 +98,10 @@ public class FindPhotoSizeUI {
         origHeightPanel.add(originalHeightText);
         contentPanel.add(origHeightPanel);
 
-        contentPanel.add(calculate);
+        buttonsPanel.add(calculate);
+        buttonsPanel.add(reset);
+        contentPanel.add(buttonsPanel);
+
         contentPanel.add(scrollPane);
 
         mainFrame.add(contentPanel);
@@ -96,32 +112,45 @@ public class FindPhotoSizeUI {
 
     private void calculateSize() {
         Size size = getValidInput();
-        if (size != null) {
-            findSize.setOriginalSize(size);
+        if (size.isValid()) {
             try {
-                findSize.calculateOptimalSizes();
-                populateSizeList(findSize.getOptimalSizes());
+                populateSizeList(findSize.calculateOptimalSizes(size));
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
         } else {
-            JOptionPane.showMessageDialog(null, "Please provide input", "No size provided", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Please provide valid input", "No valid size provided", JOptionPane.WARNING_MESSAGE);
         }
+    }
+
+    private void clearAll() {
+        resultsPanel.removeAll();
+        resultsPanel.updateUI();
+
+        mainFrame.pack();
+        mainFrame.setVisible(true);
     }
 
     private void populateSizeList(List<Size> optimalSizes) {
         resultsPanel.removeAll();
+        final ArrayList<JTextField> textFields = new ArrayList<JTextField>();
 
         for (final Size size : optimalSizes) {
 
             JPanel sizePanel = new JPanel(new FlowLayout());
-            JTextField text = new JTextField(size.displaySize());
+            final JTextField text = new JTextField(size.displaySize());
             sizePanel.add(text);
+            textFields.add(text);
 
             JButton copy = new JButton("Copy to clipboard");
             copy.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     copyToClipboard(size.toString());
+
+                    for (JTextField textField : textFields) {
+                        textField.setBackground(Color.WHITE);
+                    }
+                    text.setBackground(Color.ORANGE);
                 }
             });
             sizePanel.add(copy);
@@ -142,7 +171,11 @@ public class FindPhotoSizeUI {
     }
 
     private Size getValidInput() {
-        return new Size(Integer.parseInt(originalWidthText.getText()), Integer.parseInt(originalHeightText.getText()), 0);
+        return new Size(getIntOrZero(originalWidthText.getText()), getIntOrZero(originalHeightText.getText()), 0);
+    }
+
+    private int getIntOrZero(String text) {
+        return text != null && !"".equals(text.trim()) ? Integer.parseInt(text) : 0;
     }
 
 }

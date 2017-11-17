@@ -12,18 +12,7 @@ public class FindPhotoSize {
     private int photoMaxWidth = MAX_WIDTH;
     private int photoMinWidth = MIN_WIDTH;
 
-    private Size originalSize;
     private double threshold = OPTIMAL_THRESHOLD;
-
-    private List<Size> optimalSizes = new ArrayList<Size>();
-
-    public Size getOriginalSize() {
-        return originalSize;
-    }
-
-    void setOriginalSize(Size originalSize) {
-        this.originalSize = originalSize;
-    }
 
     public int getPhotoMaxWidth() {
         return photoMaxWidth;
@@ -45,20 +34,16 @@ public class FindPhotoSize {
         return threshold;
     }
 
-    List<Size> getOptimalSizes() {
-        return optimalSizes;
-    }
-
     public void setThreshold(float threshold) {
         this.threshold = threshold;
     }
 
-    void calculateOptimalSizes() throws Exception {
+    List<Size> calculateOptimalSizes(Size originalSize) throws Exception {
         if (originalSize == null) {
             throw new Exception("Undefined size");
         }
 
-        optimalSizes.clear();
+        List<Size> optimalSizes = new ArrayList<Size>();
         double ratio = (double) originalSize.getHeight() / originalSize.getWidth();
 
         for (int width = photoMinWidth; width <= photoMaxWidth; width++) {
@@ -68,6 +53,8 @@ public class FindPhotoSize {
                 optimalSizes.add(new Size(width, (int) Math.round(height), calculatedThreshold));
             }
         }
+
+        return optimalSizes;
     }
 }
 

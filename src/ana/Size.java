@@ -30,4 +30,8 @@ public class Size {
     String displaySize() {
         return String.format("width=\"%d\" height=\"%d\" --> %.4f", width, height, threshold);
     }
+
+    public boolean isValid() {
+        return width > 0 && height > 0;
+    }
 }
