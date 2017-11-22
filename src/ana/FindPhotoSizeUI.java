@@ -22,7 +22,7 @@ public class FindPhotoSizeUI {
 
     private FindPhotoSize findSize = new FindPhotoSize();
 
-    public FindPhotoSizeUI() {
+    private FindPhotoSizeUI() {
         prepareGUI();
     }
 
@@ -58,9 +58,44 @@ public class FindPhotoSizeUI {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
+        final JPanel minWidthPanel = new JPanel();
+        minWidthPanel.setLayout(new FlowLayout());
+
+        final JPanel maxWidthPanel = new JPanel();
+        maxWidthPanel.setLayout(new FlowLayout());
+
+        final JPanel thresholdPanel = new JPanel();
+        thresholdPanel.setLayout(new FlowLayout());
+
+        final JLabel minWidth = new JLabel("Min width", JLabel.LEFT);
+        final JTextField minWidthText = new JTextField(6);
+        minWidthText.setText("630");
+        minWidthPanel.add(minWidth);
+        minWidthPanel.add(minWidthText);
+        contentPanel.add(minWidthPanel);
+
+        final JLabel maxWidth = new JLabel("Max width", JLabel.LEFT);
+        final JTextField maxWidthText = new JTextField(6);
+        maxWidthText.setText("670");
+        maxWidthPanel.add(maxWidth);
+        maxWidthPanel.add(maxWidthText);
+        contentPanel.add(maxWidthPanel);
+
+        final JLabel threshold = new JLabel("Threshold", JLabel.LEFT);
+        final JTextField thresholdText = new JTextField(6);
+        thresholdText.setText("0.1");
+        thresholdPanel.add(threshold);
+        thresholdPanel.add(thresholdText);
+        contentPanel.add(thresholdPanel);
+
         headerLabel = new JLabel("Please enter original image size", JLabel.LEFT);
         originalWidth = new JLabel("Original width", JLabel.LEFT);
         originalWidthText = new JTextField(6);
+        mainFrame.addWindowListener(new WindowAdapter() {
+            public void windowOpened(WindowEvent e) {
+                originalWidthText.requestFocus();
+            }
+        });
         originalHeight = new JLabel("Original height", JLabel.LEFT);
         originalHeightText = new JTextField(6);
 
@@ -68,14 +103,14 @@ public class FindPhotoSizeUI {
         calculate.setBackground(new Color(183, 232, 183));
         calculate.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                calculateSize();
+                calculateSize(minWidthText.getText(), maxWidthText.getText(), thresholdText.getText());
             }
         });
         calculate.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    calculateSize();
+                    calculateSize(minWidthText.getText(), maxWidthText.getText(), thresholdText.getText());
                 }
             }
         });
@@ -110,11 +145,11 @@ public class FindPhotoSizeUI {
         mainFrame.setVisible(true);
     }
 
-    private void calculateSize() {
-        Size size = getValidInput();
+    private void calculateSize(String minWidth, String maxWidth, String threshold) {
+        final Size size = new Size(getIntOrZero(originalWidthText.getText()), getIntOrZero(originalHeightText.getText()), 0);
         if (size.isValid()) {
             try {
-                populateSizeList(findSize.calculateOptimalSizes(size));
+                populateSizeList(findSize.calculateOptimalSizes(size, minWidth, maxWidth, threshold));
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -124,6 +159,9 @@ public class FindPhotoSizeUI {
     }
 
     private void clearAll() {
+        originalWidthText.setText("");
+        originalHeightText.setText("");
+
         resultsPanel.removeAll();
         resultsPanel.updateUI();
 
@@ -142,7 +180,7 @@ public class FindPhotoSizeUI {
             sizePanel.add(text);
             textFields.add(text);
 
-            JButton copy = new JButton("Copy to clipboard");
+            JButton copy = new JButton("Copy CSS");
             copy.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     copyToClipboard(size.toString());
@@ -168,10 +206,6 @@ public class FindPhotoSizeUI {
         StringSelection stringSelection = new StringSelection(s);
         Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
         clpbrd.setContents(stringSelection, null);
-    }
-
-    private Size getValidInput() {
-        return new Size(getIntOrZero(originalWidthText.getText()), getIntOrZero(originalHeightText.getText()), 0);
     }
 
     private int getIntOrZero(String text) {
